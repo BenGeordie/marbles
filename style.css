@@ -131,3 +131,53 @@ h1 {
     color: #FFD700;
     font-size: 1.4rem;
 }
+
+.marble-ownership {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.marble-ownership h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#ownershipList {
+    margin-bottom: 1.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.ownership-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.username {
+    color: white;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.ownership-item .marble-count {
+    color: #FFD700;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.no-data {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    padding: 1rem;
+}

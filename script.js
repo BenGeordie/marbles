@@ -302,6 +302,120 @@ class MarbleGame {
     }
 }
 
+class MarbleAPI {
+    constructor() {
+        this.baseURL = 'http://localhost:3000/api';
+    }
+
+    async refresh() {
+        try {
+            const response = await fetch(`${this.baseURL}/refresh`);
+            return await response.json();
+        } catch (error) {
+            console.error('Refresh error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async requestMarble() {
+        try {
+            const response = await fetch(`${this.baseURL}/request-marble`, {
+                method: 'POST'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Request marble error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async getMarbles() {
+        try {
+            const response = await fetch(`${this.baseURL}/marbles`);
+            return await response.json();
+        } catch (error) {
+            console.error('Get marbles error:', error);
+            return {};
+        }
+    }
+}
+
+class MarbleOwnershipDisplay {
+    constructor() {
+        this.api = new MarbleAPI();
+        this.ownershipList = document.getElementById('ownershipList');
+        this.requestMarbleBtn = document.getElementById('requestMarbleBtn');
+
+        this.bindEvents();
+        this.refresh();
+        this.startPeriodicRefresh();
+    }
+
+    bindEvents() {
+        this.requestMarbleBtn.addEventListener('click', () => {
+            this.requestMarble();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            this.refresh();
+        });
+    }
+
+    async refresh() {
+        const result = await this.api.refresh();
+        if (result.success) {
+            this.displayOwnership(result.marbles);
+        } else {
+            console.error('Refresh failed:', result.error);
+        }
+    }
+
+    async requestMarble() {
+        this.requestMarbleBtn.disabled = true;
+        this.requestMarbleBtn.textContent = 'Requesting...';
+
+        const result = await this.api.requestMarble();
+
+        if (result.success) {
+            alert(`Successfully requested marble! ${result.previousCount} -> ${result.newCount}\nBranch: ${result.branch}`);
+            await this.refresh();
+        } else {
+            alert(`Failed to request marble: ${result.error}`);
+        }
+
+        this.requestMarbleBtn.disabled = false;
+        this.requestMarbleBtn.textContent = 'Request Marble';
+    }
+
+    displayOwnership(marbles) {
+        this.ownershipList.innerHTML = '';
+
+        const sortedEntries = Object.entries(marbles)
+            .sort(([,a], [,b]) => b - a);
+
+        sortedEntries.forEach(([name, count]) => {
+            const item = document.createElement('div');
+            item.className = 'ownership-item';
+            item.innerHTML = `
+                <span class="username">${name}</span>
+                <span class="marble-count">${count} marbles</span>
+            `;
+            this.ownershipList.appendChild(item);
+        });
+
+        if (sortedEntries.length === 0) {
+            this.ownershipList.innerHTML = '<div class="no-data">No marble data yet. Click refresh to start!</div>';
+        }
+    }
+
+    startPeriodicRefresh() {
+        setInterval(() => {
+            this.refresh();
+        }, 5 * 60 * 1000); // 5 minutes
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     window.marbleGame = new MarbleGame();
+    window.marbleOwnership = new MarbleOwnershipDisplay();
 });
