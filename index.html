@@ -9,27 +9,16 @@
 <body>
     <div class="container">
         <h1>Marbles</h1>
-        
-        <div class="jar-container">
-            <div class="jar">
-                <canvas id="physicsCanvas"></canvas>
-            </div>
+
+        <div id="notification" class="notification hidden"></div>
+
+        <div id="jarsContainer" class="jars-container">
+            <!-- Jars will be dynamically created here -->
         </div>
-        
+
         <div class="controls">
             <button id="addMarbleBtn" class="btn primary">Add Marble</button>
             <button id="undoBtn" class="btn secondary">Undo</button>
-        </div>
-        
-        <div class="marble-count">
-            <span>Marbles: </span>
-            <span id="marbleCounter">0</span>
-        </div>
-
-        <div class="marble-ownership">
-            <h3>Marble Ownership</h3>
-            <div id="ownershipList"></div>
-            <button id="requestMarbleBtn" class="btn primary">Request Marble</button>
         </div>
     </div>
     

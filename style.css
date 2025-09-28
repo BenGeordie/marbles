@@ -31,23 +31,35 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.jar-container {
+.jars-container {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
+    gap: 2rem;
     margin-bottom: 2rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.jar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .jar {
-    width: 300px;
-    height: 400px;
-    background: linear-gradient(to bottom, 
-        rgba(255, 255, 255, 0.3) 0%, 
+    width: 250px;
+    height: 300px;
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.3) 0%,
         rgba(255, 255, 255, 0.1) 100%);
     border: 3px solid rgba(255, 255, 255, 0.4);
-    border-radius: 0 0 150px 150px;
+    border-radius: 0 0 125px 125px;
     position: relative;
     overflow: hidden;
-    box-shadow: 
+    box-shadow:
         inset 0 0 20px rgba(255, 255, 255, 0.2),
         0 4px 20px rgba(0, 0, 0, 0.3);
 }
@@ -132,52 +144,53 @@ h1 {
     font-size: 1.4rem;
 }
 
-.marble-ownership {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.marble-ownership h3 {
+.jar-label {
     color: white;
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-#ownershipList {
-    margin-bottom: 1.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.ownership-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem;
+    font-weight: 600;
     margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.username {
-    color: white;
-    font-weight: 600;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
 }
 
-.ownership-item .marble-count {
+.jar-count {
     color: #FFD700;
-    font-size: 1rem;
     font-weight: 600;
+    margin-top: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1rem;
 }
 
-.no-data {
-    color: rgba(255, 255, 255, 0.7);
-    font-style: italic;
-    padding: 1rem;
+.notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    padding: 2rem 3rem;
+    border-radius: 20px;
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.6);
+    z-index: 1000;
+    animation: bounceIn 0.6s ease-out;
+}
+
+.notification.hidden {
+    display: none;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
 }
