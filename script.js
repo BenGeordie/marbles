@@ -334,6 +334,7 @@ class MarbleSystem {
         this.jars = new Map();
         this.currentUser = null;
         this.notification = document.getElementById('notification');
+        this.latestNotification = 0;
 
         this.bindEvents();
         this.refresh();
@@ -358,6 +359,7 @@ class MarbleSystem {
         const previousData = this.loadFromStorage();
 
         const result = await this.api.refresh();
+        console.log('result', result);
         if (result.success) {
             this.currentUser = result.username;
             await this.updateJars(result.marbles, previousData);
@@ -368,8 +370,10 @@ class MarbleSystem {
     }
 
     async updateJars(newData, previousData) {
+        console.log('newData', newData);
+        console.log('previousData', previousData);
         const changes = this.detectChanges(previousData, newData);
-
+        console.log('changes', changes);
         if (changes.userGotMarble && changes.user === this.currentUser) {
             this.showNotification('You got a new marble!');
         }
@@ -378,6 +382,7 @@ class MarbleSystem {
         this.jars.clear();
 
         for (const [owner, count] of Object.entries(newData)) {
+            console.log('owner', owner, 'count', count);
             const jar = new OwnerJar(owner, count);
             this.jars.set(owner, jar);
 
@@ -448,9 +453,13 @@ class MarbleSystem {
     showNotification(message) {
         this.notification.textContent = message;
         this.notification.classList.remove('hidden');
+        const now = Date.now();
+        this.latestNotification = now;
 
         setTimeout(() => {
-            this.notification.classList.add('hidden');
+            if (this.latestNotification === now) {
+                this.notification.classList.add('hidden');
+            }
         }, 3000);
     }
 

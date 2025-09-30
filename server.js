@@ -41,6 +41,7 @@ app.get('/api/refresh', async (req, res) => {
 
         const username = await getCurrentUsername();
         const marbleData = await readMarbleData();
+        console.log('marbleData', marbleData);
 
         if (!marbleData[username]) {
             marbleData[username] = 0;
@@ -77,14 +78,16 @@ app.post('/api/request-marble', async (req, res) => {
         await git.checkoutLocalBranch(branchName);
 
         marbleData[username] = newCount;
+        console.log('Writing marbleData', marbleData);
         await writeMarbleData(marbleData);
-
+        
         await git.add('marble_ownership.json');
         await git.commit(`Add marble for ${username} (${currentCount} -> ${newCount})`);
 
         await git.push('origin', branchName);
 
         await git.checkout('master');
+        console.log("Pushed and returned to master");
 
         res.json({
             success: true,
