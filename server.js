@@ -10,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const git = simpleGit();
 const execFileAsync = promisify(execFile);
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 app.use(cors());
 app.use(express.json());
@@ -36,6 +37,31 @@ async function readMarbleData() {
 
 async function writeMarbleData(data) {
     await fs.writeFile('marble_ownership.json', JSON.stringify(data, null, 4));
+}
+
+function isLockRefError(error) {
+    const messageParts = [error?.message, error?.stderr, error?.stdout]
+        .filter(Boolean)
+        .join(' ');
+    return /cannot lock ref/i.test(messageParts) || /unable to update local ref/i.test(messageParts);
+}
+
+async function pullWithRetry(branch = 'master', retries = 1, delayMs = 750) {
+    let attempt = 0;
+    while (attempt <= retries) {
+        try {
+            await git.pull('origin', branch, { '--no-rebase': null });
+            return;
+        } catch (error) {
+            if (attempt < retries && isLockRefError(error)) {
+                console.warn(`Pull attempt ${attempt + 1} failed with ref lock; retrying after ${delayMs}ms...`);
+                await wait(delayMs);
+                attempt += 1;
+                continue;
+            }
+            throw error;
+        }
+    }
 }
 
 function extractUrl(output) {
@@ -118,7 +144,7 @@ async function createPullRequest(branchName, username, previousCount, newCount) 
 
 app.get('/api/refresh', async (req, res) => {
     try {
-        await git.pull('origin', 'master');
+        await pullWithRetry('master', 2);
 
         const username = await getCurrentUsername();
         const marbleData = await readMarbleData();
@@ -146,7 +172,7 @@ app.get('/api/refresh', async (req, res) => {
 
 app.post('/api/request-marble', async (req, res) => {
     try {
-        await git.pull('origin', 'master');
+            await pullWithRetry('master', 2);
 
         const username = await getCurrentUsername();
         const marbleData = await readMarbleData();
