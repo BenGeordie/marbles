@@ -417,6 +417,8 @@ class MarbleSystem {
     }
 
     async requestMarble() {
+        this.showNotification('We begged your friends to give you a marble. Be patient now.');
+
         const addBtn = document.getElementById('addMarbleBtn');
         addBtn.disabled = true;
         addBtn.textContent = 'Requesting...';
@@ -424,9 +426,9 @@ class MarbleSystem {
         const result = await this.api.requestMarble();
 
         if (result.success) {
-            this.showNotification('We begged your friends to give you a marble. Be patient now.');
+            this.showNotification('Ok now we *actually* did it.');
         } else {
-            this.showNotification(`Failed to request marble: ${result.error}`);
+            this.showNotification(`Just kidding. Failed to request marble: ${result.error}`);
         }
 
         addBtn.disabled = false;
