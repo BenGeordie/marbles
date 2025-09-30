@@ -383,7 +383,8 @@ class MarbleSystem {
 
         for (const [owner, count] of Object.entries(newData)) {
             console.log('owner', owner, 'count', count);
-            const jar = new OwnerJar(owner, count);
+            // count - changes.marblesAdded[owner] to prevent double counting
+            const jar = new OwnerJar(owner, count - changes.marblesAdded[owner]);
             this.jars.set(owner, jar);
 
             if (changes.marblesAdded[owner] > 0) {
