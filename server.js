@@ -2,11 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 const simpleGit = require('simple-git');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const git = simpleGit();
+const execFileAsync = promisify(execFile);
 
 app.use(cors());
 app.use(express.json());
@@ -33,6 +36,84 @@ async function readMarbleData() {
 
 async function writeMarbleData(data) {
     await fs.writeFile('marble_ownership.json', JSON.stringify(data, null, 4));
+}
+
+function extractUrl(output) {
+    if (!output) {
+        return null;
+    }
+    const match = output.match(/https?:\/\/\S+/);
+    return match ? match[0] : null;
+}
+
+async function getExistingPullRequestUrl(branchName) {
+    try {
+        const { stdout } = await execFileAsync(
+            'gh',
+            ['pr', 'view', branchName, '--json', 'url'],
+            { cwd: process.cwd() }
+        );
+        const parsed = JSON.parse(stdout);
+        return parsed.url || null;
+    } catch (error) {
+        console.error('Error retrieving existing PR URL:', error);
+        return null;
+    }
+}
+
+async function createPullRequest(branchName, username, previousCount, newCount) {
+    const title = `Add marble for ${username} (${previousCount} -> ${newCount})`;
+    const body = [
+        '## Summary',
+        `- Add one marble for ${username}`,
+        '',
+        `Previous count: ${previousCount}`,
+        `New count: ${newCount}`,
+        '',
+        'Generated automatically by the marble server.'
+    ].join('\n');
+
+    try {
+        const { stdout, stderr } = await execFileAsync(
+            'gh',
+            [
+                'pr',
+                'create',
+                '--base',
+                'master',
+                '--head',
+                branchName,
+                '--title',
+                title,
+                '--body',
+                body
+            ],
+            { cwd: process.cwd() }
+        );
+
+        const urlFromStdout = extractUrl(stdout);
+        if (urlFromStdout) {
+            return urlFromStdout;
+        }
+        const urlFromStderr = extractUrl(stderr);
+        if (urlFromStderr) {
+            return urlFromStderr;
+        }
+        return stdout.trim() || stderr.trim() || null;
+    } catch (error) {
+        const stderr = error.stderr ? error.stderr.trim() : '';
+        const stdout = error.stdout ? error.stdout.trim() : '';
+        const message = stderr || stdout || error.message;
+
+        if (/already exists/i.test(message)) {
+            const existingUrl = await getExistingPullRequestUrl(branchName);
+            if (existingUrl) {
+                return existingUrl;
+            }
+        }
+
+        throw new Error(`Failed to create pull request: ${message}`);
+    }
 }
 
 app.get('/api/refresh', async (req, res) => {
@@ -86,8 +167,10 @@ app.post('/api/request-marble', async (req, res) => {
 
         await git.push('origin', branchName);
 
+        const prUrl = await createPullRequest(branchName, username, currentCount, newCount);
+
         await git.checkout('master');
-        console.log("Pushed and returned to master");
+        console.log("Pushed, created PR, and returned to master");
 
         res.json({
             success: true,
@@ -95,7 +178,8 @@ app.post('/api/request-marble', async (req, res) => {
             previousCount: currentCount,
             newCount: newCount,
             branch: branchName,
-            message: `Created PR branch ${branchName} to add marble for ${username}`
+            pullRequestUrl: prUrl,
+            message: `Created pull request ${prUrl || 'for branch ' + branchName} to add marble for ${username}`
         });
     } catch (error) {
         console.error('Request marble error:', error);
