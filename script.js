@@ -335,6 +335,8 @@ class MarbleSystem {
         this.currentUser = null;
         this.notification = document.getElementById('notification');
         this.latestNotification = 0;
+        this.notificationHideTimeout = null;
+        this.waitingOnRefresh = false;
 
         this.bindEvents();
         this.refresh();
@@ -361,10 +363,18 @@ class MarbleSystem {
         const result = await this.api.refresh();
         console.log('result', result);
         if (result.success) {
+            if (this.waitingOnRefresh) {
+                this.waitingOnRefresh = false;
+                this.clearNotification();
+            }
             this.currentUser = result.username;
             await this.updateJars(result.marbles, previousData);
             this.saveToStorage(result.marbles);
         } else {
+            if (!this.waitingOnRefresh) {
+                this.showNotification('Just a little longer...', { persistent: true });
+            }
+            this.waitingOnRefresh = true;
             console.error('Refresh failed:', result.error);
         }
     }
@@ -451,17 +461,37 @@ class MarbleSystem {
         }
     }
 
-    showNotification(message) {
+    showNotification(message, options = {}) {
+        const { persistent = false, duration = 3000 } = options;
+
+        if (this.notificationHideTimeout) {
+            clearTimeout(this.notificationHideTimeout);
+            this.notificationHideTimeout = null;
+        }
+
         this.notification.textContent = message;
         this.notification.classList.remove('hidden');
+
         const now = Date.now();
         this.latestNotification = now;
 
-        setTimeout(() => {
-            if (this.latestNotification === now) {
-                this.notification.classList.add('hidden');
-            }
-        }, 3000);
+        if (!persistent) {
+            this.notificationHideTimeout = setTimeout(() => {
+                if (this.latestNotification === now) {
+                    this.notification.classList.add('hidden');
+                    this.notificationHideTimeout = null;
+                }
+            }, duration);
+        }
+    }
+
+    clearNotification() {
+        if (this.notificationHideTimeout) {
+            clearTimeout(this.notificationHideTimeout);
+            this.notificationHideTimeout = null;
+        }
+        this.latestNotification = Date.now();
+        this.notification.classList.add('hidden');
     }
 
     loadFromStorage() {
